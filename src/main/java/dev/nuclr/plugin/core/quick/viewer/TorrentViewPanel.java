@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class TorrentViewPanel extends JPanel {
@@ -27,6 +28,8 @@ public class TorrentViewPanel extends JPanel {
 	private static final DateTimeFormatter DATE_FMT =
 			DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
+	private volatile Thread loadThread;
+
 	public TorrentViewPanel() {
 		setLayout(new BorderLayout());
 		showMessage("No file selected.");
@@ -34,17 +37,22 @@ public class TorrentViewPanel extends JPanel {
 
 	// ---- public API -------------------------------------------------------
 
-	public boolean load(QuickViewItem item) {
+	public boolean load(QuickViewItem item, AtomicBoolean cancelled) {
+		Thread prev = loadThread;
+		if (prev != null) prev.interrupt();
 		showMessage("Loading\u2026");
-		Thread.ofVirtual().start(() -> {
+		loadThread = Thread.ofVirtual().start(() -> {
 			try {
 				byte[] data;
 				try (var in = item.openStream()) {
 					data = in.readAllBytes();
 				}
+				if (cancelled.get()) return;
 				TorrentMeta meta = TorrentParser.parse(data);
+				if (cancelled.get()) return;
 				SwingUtilities.invokeLater(() -> showMeta(meta));
 			} catch (Exception e) {
+				if (cancelled.get()) return;
 				log.error("Failed to parse torrent: {}", item.name(), e);
 				String msg = e.getMessage();
 				if (msg == null) msg = e.getClass().getSimpleName();
@@ -57,6 +65,9 @@ public class TorrentViewPanel extends JPanel {
 	}
 
 	public void clear() {
+		Thread prev = loadThread;
+		if (prev != null) prev.interrupt();
+		loadThread = null;
 		SwingUtilities.invokeLater(() -> showMessage(""));
 	}
 
