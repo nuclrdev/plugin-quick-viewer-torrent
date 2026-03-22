@@ -1,6 +1,6 @@
 package dev.nuclr.plugin.core.quick.viewer;
 
-import dev.nuclr.plugin.QuickViewItem;
+import dev.nuclr.plugin.PluginPathResource;
 import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentFileEntry;
 import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentMeta;
 import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentParser;
@@ -37,7 +37,7 @@ public class TorrentViewPanel extends JPanel {
 
 	// ---- public API -------------------------------------------------------
 
-	public boolean load(QuickViewItem item, AtomicBoolean cancelled) {
+	public boolean load(PluginPathResource item, AtomicBoolean cancelled) {
 		Thread prev = loadThread;
 		if (prev != null) prev.interrupt();
 		showMessage("Loading\u2026");
@@ -53,7 +53,7 @@ public class TorrentViewPanel extends JPanel {
 				SwingUtilities.invokeLater(() -> showMeta(meta));
 			} catch (Exception e) {
 				if (cancelled.get()) return;
-				log.error("Failed to parse torrent: {}", item.name(), e);
+				log.error("Failed to parse torrent: {}", item.getName(), e);
 				String msg = e.getMessage();
 				if (msg == null) msg = e.getClass().getSimpleName();
 				if (msg.length() > 300) msg = msg.substring(0, 300) + "\u2026";

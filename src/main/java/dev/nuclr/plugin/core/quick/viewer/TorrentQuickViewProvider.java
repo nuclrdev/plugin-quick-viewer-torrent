@@ -1,25 +1,39 @@
 package dev.nuclr.plugin.core.quick.viewer;
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JComponent;
 
-import dev.nuclr.plugin.QuickViewItem;
-import dev.nuclr.plugin.QuickViewProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class TorrentQuickViewProvider implements QuickViewProvider {
+import dev.nuclr.plugin.ApplicationPluginContext;
+import dev.nuclr.plugin.MenuResource;
+import dev.nuclr.plugin.PluginManifest;
+import dev.nuclr.plugin.PluginPathResource;
+import dev.nuclr.plugin.QuickViewProviderPlugin;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+public class TorrentQuickViewProvider implements QuickViewProviderPlugin {
+
+	private ApplicationPluginContext context;
 	private TorrentViewPanel panel;
 	private volatile AtomicBoolean currentCancelled;
 
 	@Override
-	public String getPluginClass() {
-		return getClass().getName();
-	}
-
-	@Override
-	public boolean matches(QuickViewItem item) {
-		return TorrentViewPanel.EXTENSIONS.contains(item.extension().toLowerCase());
+	public PluginManifest getPluginInfo() {
+		ObjectMapper objectMapper = context != null ? context.getObjectMapper() : new ObjectMapper();
+		try (InputStream is = getClass().getResourceAsStream("/plugin.json")) {
+			if (is != null) {
+				return objectMapper.readValue(is, PluginManifest.class);
+			}
+		} catch (Exception e) {
+			log.error("Error reading /plugin.json for TorrentQuickViewProvider", e);
+		}
+		return null;
 	}
 
 	@Override
@@ -31,16 +45,39 @@ public class TorrentQuickViewProvider implements QuickViewProvider {
 	}
 
 	@Override
-	public boolean open(QuickViewItem item, AtomicBoolean cancelled) {
-		if (currentCancelled != null) currentCancelled.set(true);
-		this.currentCancelled = cancelled;
-		getPanel(); // ensure panel exists
-		return this.panel.load(item, cancelled);
+	public List<MenuResource> getMenuItems(PluginPathResource source) {
+		return List.of();
 	}
 
 	@Override
-	public void close() {
-		if (currentCancelled != null) currentCancelled.set(true);
+	public void load(ApplicationPluginContext context) {
+		this.context = context;
+	}
+
+	@Override
+	public boolean supports(PluginPathResource resource) {
+		if (resource == null || resource.getExtension() == null) {
+			return false;
+		}
+		return TorrentViewPanel.EXTENSIONS.contains(resource.getExtension().toLowerCase(Locale.ROOT));
+	}
+
+	@Override
+	public boolean openItem(PluginPathResource resource, AtomicBoolean cancelled) {
+		if (currentCancelled != null) {
+			currentCancelled.set(true);
+		}
+		this.currentCancelled = cancelled;
+		getPanel();
+		return this.panel.load(resource, cancelled);
+	}
+
+	@Override
+	public void closeItem() {
+		if (currentCancelled != null) {
+			currentCancelled.set(true);
+			currentCancelled = null;
+		}
 		if (this.panel != null) {
 			this.panel.clear();
 		}
@@ -48,13 +85,23 @@ public class TorrentQuickViewProvider implements QuickViewProvider {
 
 	@Override
 	public void unload() {
-		close();
+		closeItem();
 		this.panel = null;
+		this.context = null;
 	}
 
 	@Override
-	public int priority() {
+	public int getPriority() {
 		return 1;
 	}
 
+	@Override
+	public void onFocusGained() {
+		// Quick view providers do not need focus-specific behavior.
+	}
+
+	@Override
+	public void onFocusLost() {
+		// Quick view providers do not need focus-specific behavior.
+	}
 }
