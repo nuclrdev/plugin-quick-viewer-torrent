@@ -1,126 +1,150 @@
-# Torrent Quick Viewer
+# 🧲 Torrent Quick Viewer
 
-A [Nuclr Commander](https://nuclr.dev) plugin that renders a rich read-only preview of `.torrent` files directly in the Quick View panel — no network access, no tracker calls, no external tools required.
+> Preview `.torrent` files inside **Nuclr Commander** with zero guesswork, zero network calls, and zero external tools.
 
----
+![Torrent Quick Viewer screenshot](images/screenshot-1.jpg)
 
-## Preview
+## ✨ What This Plugin Does
+
+**Torrent Quick Viewer** is an official [Nuclr Commander](https://nuclr.dev) plugin that turns raw `.torrent` files into a clean, rich, read-only preview panel.
+
+Instead of staring at bencoded data, you get the important details instantly:
+
+- 📦 Torrent name, mode, total size, piece size, and piece count
+- 🗂️ Full file listing for multi-file torrents
+- 🌐 Trackers grouped by announce tier
+- 🔐 SHA-1 info hash with copy action
+- 🧲 Full magnet link with copy action
+- 📝 Comment, creation date, and created-by metadata
+- 🚫 No tracker calls, no downloads, no peer traffic
+
+## 🖼️ Preview
+
+The quick view panel is designed to surface the details that actually matter when inspecting a torrent:
 
 | Section | What you see |
 |---|---|
-| **Summary** | Name, mode (single / multi-file), total size, file count, piece length & count, private flag |
-| **Metadata** | Created-by string, creation date (local time), comment |
-| **Info Hash** | 40-char lowercase SHA-1 hex + **Copy** button |
-| **Magnet Link** | Full `magnet:?xt=urn:btih:…` URI with trackers + **Copy Magnet** button |
-| **Trackers** | All unique trackers; announce-list tiers shown grouped (Tier 1, Tier 2 …) |
-| **Files** | Path and size for every file; large lists capped at 500 entries |
+| ⚡ Summary | Name, single vs multi-file mode, total size, file count, piece length, piece count, private flag |
+| 📝 Metadata | Created-by string, creation date, comment |
+| 🔐 Info Hash | 40-character lowercase SHA-1 hash with copy support |
+| 🧲 Magnet Link | Full `magnet:?xt=urn:btih:...` URI including trackers |
+| 🌐 Trackers | Unique trackers plus grouped announce-list tiers |
+| 📂 Files | File path and size for every entry, capped at 500 rows |
 
----
+## 🚀 Installation
 
-## Installation
+Copy the signed plugin archive and detached signature into the Nuclr Commander `plugins/` directory:
 
-Copy the signed plugin archive and its detached signature into the Nuclr Commander `plugins/` directory:
-
-```
+```text
 quick-view-torrent-1.0.0.zip
 quick-view-torrent-1.0.0.zip.sig
 ```
 
-Nuclr Commander verifies the RSA-SHA256 signature against `nuclr-cert.pem` on load. The plugin is active immediately — no restart required.
+Nuclr Commander verifies the `RSA-SHA256` signature against `nuclr-cert.pem` on load.
 
----
+No restart. No manual activation. Drop it in and it is live. ⚙️
 
-## Building
+## 🛠️ Build
 
-Prerequisites: **Java 21+**, **Maven 3.9+**, and the `plugins-sdk` installed locally (`mvn install` in `plugins-sdk/`).
+Prerequisites:
+
+- ☕ Java 21+
+- 🔨 Maven 3.9+
+- 📚 Local `plugins-sdk` install (`mvn install` inside `plugins-sdk/`)
+
+Build, test, package, and sign:
 
 ```bash
-# Compile, test, package and sign
 mvn clean verify -Djarsigner.storepass=<keystore-password>
-
-# Artifacts produced in target/
-#   quick-view-torrent-1.0.0.zip      — plugin archive
-#   quick-view-torrent-1.0.0.zip.sig  — detached RSA-SHA256 signature
 ```
 
-The signing step requires the keystore at `C:/nuclr/key/nuclr-signing.p12` with alias `nuclr`.
+Artifacts are written to `target/`:
 
-### Quick deploy to local commander
+- `quick-view-torrent-1.0.0.zip`
+- `quick-view-torrent-1.0.0.zip.sig`
+
+Signing expects this keystore configuration:
+
+- Path: `C:/nuclr/key/nuclr-signing.p12`
+- Alias: `nuclr`
+
+### ⚡ Local Deploy
 
 ```bat
 deploy.bat
 ```
 
-Runs `mvn clean verify` then copies both artifacts into `C:\nuclr\sources\commander\plugins\`.
+This runs `mvn clean verify` and copies the built artifacts into:
 
----
+```text
+C:\nuclr\sources\commander\plugins\
+```
 
-## How it works
+## 🧠 How It Works
 
-### Bencode parser
+### 📚 Bencode parser
 
-A zero-dependency parser operates directly on the raw `byte[]` of the torrent file. It supports all four bencode types (integer, byte string, list, dictionary) and tracks the exact byte-range of the `info` dictionary value so the SHA-1 info hash is computed over the original bytes — matching what BitTorrent clients produce.
+The plugin includes a zero-dependency parser that reads the raw `byte[]` content of the torrent file directly. It supports all four bencode types:
 
-Safety limits prevent malformed or adversarial files from hanging or crashing the host application:
+- integer
+- byte string
+- list
+- dictionary
+
+It also tracks the exact byte range of the `info` dictionary so the computed SHA-1 info hash matches the value BitTorrent clients and trackers expect.
+
+### 🛡️ Safety limits
+
+Malformed or hostile files are constrained with hard parser guards:
 
 | Guard | Limit |
 |---|---|
 | Max nesting depth | 64 |
-| Max total list/dict entries | 100 000 |
+| Max total list/dict entries | 100,000 |
 | Max byte-string length | 50 MB |
 
-### String encoding
+### 🔤 String decoding
 
-Byte strings are decoded as **UTF-8** when valid; otherwise fall back to **ISO-8859-1** (covers the majority of older Windows-created torrents).
+Byte strings are decoded as **UTF-8** when valid, with fallback to **ISO-8859-1** for broader compatibility with older torrents.
 
-### Info hash
+### 🧵 Async loading
 
-SHA-1 is computed over the verbatim bencoded bytes of the `info` dictionary — identical to the hash used by BitTorrent clients and trackers.
+Parsing runs on a virtual thread so the Swing EDT stays responsive. The panel shows a loading state first, then swaps to the rendered preview or an error view when parsing completes.
 
-### Asynchronous loading
-
-Parsing runs on a virtual thread. The UI shows a "Loading…" indicator immediately and switches to the full panel (or an error panel) once parsing completes, so the Swing EDT is never blocked.
-
----
-
-## Plugin manifest
+## 📦 Plugin Manifest
 
 ```json
 {
-  "id":      "dev.nuclr.plugin.core.quickviewer.torrent",
-  "name":    "Torrent Quick Viewer",
+  "id": "dev.nuclr.plugin.core.quickviewer.torrent",
+  "name": "Torrent Quick Viewer",
   "version": "1.0.0",
-  "type":    "Official",
+  "type": "Official",
   "quickViewProviders": [
     "dev.nuclr.plugin.core.quick.viewer.TorrentQuickViewProvider"
   ]
 }
 ```
 
----
+## 🗃️ Source Layout
 
-## Source layout
-
-```
+```text
 src/
 ├── main/java/dev/nuclr/plugin/core/quick/viewer/
-│   ├── TorrentQuickViewProvider.java   # QuickViewProvider entry point
-│   ├── TorrentViewPanel.java           # Swing UI panel
+│   ├── TorrentQuickViewProvider.java
+│   ├── TorrentViewPanel.java
 │   └── torrent/
-│       ├── BencodeParser.java          # Low-level bencode parser
-│       ├── BencodeException.java       # Parse error
-│       ├── TorrentParser.java          # High-level .torrent parser
-│       ├── TorrentMeta.java            # Parsed metadata model
-│       └── TorrentFileEntry.java       # Single file entry (path + size)
+│       ├── BencodeParser.java
+│       ├── BencodeException.java
+│       ├── TorrentParser.java
+│       ├── TorrentMeta.java
+│       └── TorrentFileEntry.java
 ├── main/resources/
 │   └── plugin.json
 └── test/java/dev/nuclr/plugin/core/quick/viewer/torrent/
-    ├── BencodeParserTest.java          # Bencode decoding unit tests
-    └── TorrentParserTest.java          # Torrent parsing & robustness tests
+    ├── BencodeParserTest.java
+    └── TorrentParserTest.java
 ```
 
----
+## 📄 License
 
-## License
-
-Apache License 2.0 — see [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).
