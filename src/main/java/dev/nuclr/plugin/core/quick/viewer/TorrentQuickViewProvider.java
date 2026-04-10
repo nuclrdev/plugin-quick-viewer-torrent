@@ -94,8 +94,8 @@ public class TorrentQuickViewProvider implements NuclrPlugin {
 		return false;
 	}
 	
-	private String name = "Torrent Quick Viewer";
 	private String id = "dev.nuclr.plugin.core.quickviewer.torrent";
+	private String name = "Torrent Quick Viewer";
 	private String version = "1.0.0";
 	private String description = "A quick viewer for .torrent files — displays metadata, trackers, file listing, info hash and magnet link.";
 	private String author = "Nuclr Development Team";
