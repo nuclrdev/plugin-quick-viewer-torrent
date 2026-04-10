@@ -50,7 +50,7 @@ Prerequisites:
 
 - ☕ Java 21+
 - 🔨 Maven 3.9+
-- 📚 Local `plugins-sdk` install (`mvn install` inside `plugins-sdk/`)
+- 📚 Local `platform-sdk` install (`mvn install` inside `platform-sdk/`)
 
 Build, test, package, and sign:
 

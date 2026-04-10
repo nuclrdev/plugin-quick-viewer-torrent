@@ -1,14 +1,14 @@
 package dev.nuclr.plugin.core.quick.viewer;
 
-import dev.nuclr.plugin.PluginPathResource;
-import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentFileEntry;
-import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentMeta;
-import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentParser;
-import lombok.extern.slf4j.Slf4j;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -17,6 +17,25 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+
+import dev.nuclr.platform.plugin.NuclrResourcePath;
+import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentFileEntry;
+import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentMeta;
+import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentParser;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TorrentViewPanel extends JPanel {
@@ -37,7 +56,7 @@ public class TorrentViewPanel extends JPanel {
 
 	// ---- public API -------------------------------------------------------
 
-	public boolean load(PluginPathResource item, AtomicBoolean cancelled) {
+	public boolean load(NuclrResourcePath item, AtomicBoolean cancelled) {
 		Thread prev = loadThread;
 		if (prev != null) prev.interrupt();
 		showMessage("Loading\u2026");
