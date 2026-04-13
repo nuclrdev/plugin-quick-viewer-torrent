@@ -34,7 +34,7 @@ public class TorrentQuickViewProvider implements NuclrPlugin {
 	}
 
 	@Override
-	public void load(NuclrPluginContext context) {
+	public void load(NuclrPluginContext context, boolean isTemplate) {
 		this.context = context;
 	}
 
