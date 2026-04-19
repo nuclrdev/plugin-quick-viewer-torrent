@@ -10,6 +10,7 @@ import dev.nuclr.platform.NuclrThemeScheme;
 import dev.nuclr.platform.plugin.NuclrMenuResource;
 import dev.nuclr.platform.plugin.NuclrPlugin;
 import dev.nuclr.platform.plugin.NuclrPluginContext;
+import dev.nuclr.platform.plugin.NuclrPluginRole;
 import dev.nuclr.platform.plugin.NuclrResourcePath;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +20,7 @@ public class TorrentQuickViewProvider implements NuclrPlugin {
 	private NuclrPluginContext context;
 	private TorrentViewPanel panel;
 	private volatile AtomicBoolean currentCancelled;
+	private String uuid = java.util.UUID.randomUUID().toString();
 
 	@Override
 	public JComponent panel() {
@@ -156,6 +158,21 @@ public class TorrentQuickViewProvider implements NuclrPlugin {
 
 	@Override
 	public void updateTheme(NuclrThemeScheme themeScheme) {
+	}
+
+	@Override
+	public NuclrPluginRole role() {
+		return NuclrPluginRole.QuickViewer;
+	}
+
+	@Override
+	public NuclrResourcePath getCurrentResource() {
+		return null;
+	}
+
+	@Override
+	public String uuid() {
+		return uuid;
 	}
 	
 }
