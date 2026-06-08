@@ -31,7 +31,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 
-import dev.nuclr.platform.plugin.NuclrResourcePath;
+import dev.nuclr.platform.plugin.NuclrResource;
 import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentFileEntry;
 import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentMeta;
 import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentParser;
@@ -56,14 +56,14 @@ public class TorrentViewPanel extends JPanel {
 
 	// ---- public API -------------------------------------------------------
 
-	public boolean load(NuclrResourcePath item, AtomicBoolean cancelled) {
+	public boolean load(NuclrResource item, AtomicBoolean cancelled) {
 		Thread prev = loadThread;
 		if (prev != null) prev.interrupt();
 		showMessage("Loading\u2026");
 		loadThread = Thread.ofVirtual().start(() -> {
 			try {
 				byte[] data;
-				try (var in = item.openStream()) {
+				try (var in = item.openInputStream()) {
 					data = in.readAllBytes();
 				}
 				if (cancelled.get()) return;

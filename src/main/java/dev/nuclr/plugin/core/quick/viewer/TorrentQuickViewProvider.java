@@ -1,21 +1,18 @@
 package dev.nuclr.plugin.core.quick.viewer;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JComponent;
 
 import dev.nuclr.platform.NuclrThemeScheme;
-import dev.nuclr.platform.plugin.NuclrMenuResource;
-import dev.nuclr.platform.plugin.NuclrPlugin;
 import dev.nuclr.platform.plugin.NuclrPluginContext;
-import dev.nuclr.platform.plugin.NuclrPluginRole;
-import dev.nuclr.platform.plugin.NuclrResourcePath;
+import dev.nuclr.platform.plugin.NuclrResource;
+import dev.nuclr.platform.plugin.QuickViewNuclrPlugin;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TorrentQuickViewProvider implements NuclrPlugin {
+public class TorrentQuickViewProvider implements QuickViewNuclrPlugin {
 
 	private NuclrPluginContext context;
 	private TorrentViewPanel panel;
@@ -31,25 +28,42 @@ public class TorrentQuickViewProvider implements NuclrPlugin {
 	}
 
 	@Override
-	public List<NuclrMenuResource> menuItems(NuclrResourcePath source) {
-		return List.of();
-	}
-
-	@Override
-	public void load(NuclrPluginContext context, boolean isTemplate) {
+	public void preinit(NuclrPluginContext context) {
 		this.context = context;
 	}
 
 	@Override
-	public boolean supports(NuclrResourcePath resource) {
-		if (resource == null || resource.getExtension() == null) {
-			return false;
-		}
-		return TorrentViewPanel.EXTENSIONS.contains(resource.getExtension().toLowerCase(Locale.ROOT));
+	public void init() {
 	}
 
 	@Override
-	public boolean openResource(NuclrResourcePath resource, AtomicBoolean cancelled) {
+	public NuclrPluginContext getContext() {
+		return this.context;
+	}
+
+	@Override
+	public boolean supports(NuclrResource resource) {
+		String extension = extension(resource);
+		if (extension == null) {
+			return false;
+		}
+		return TorrentViewPanel.EXTENSIONS.contains(extension.toLowerCase(Locale.ROOT));
+	}
+
+	private static String extension(NuclrResource resource) {
+		if (resource == null || resource.getName() == null) {
+			return null;
+		}
+		String name = resource.getName();
+		int dot = name.lastIndexOf('.');
+		if (dot < 0 || dot == name.length() - 1) {
+			return null;
+		}
+		return name.substring(dot + 1);
+	}
+
+	@Override
+	public boolean openResource(NuclrResource resource, AtomicBoolean cancelled) {
 		if (currentCancelled != null) {
 			currentCancelled.set(true);
 		}
@@ -152,7 +166,7 @@ public class TorrentQuickViewProvider implements NuclrPlugin {
 	}
 
 	@Override
-	public Developer type() {
+	public Developer developer() {
 		return Developer.Official;
 	}
 
@@ -161,12 +175,7 @@ public class TorrentQuickViewProvider implements NuclrPlugin {
 	}
 
 	@Override
-	public NuclrPluginRole role() {
-		return NuclrPluginRole.QuickViewer;
-	}
-
-	@Override
-	public NuclrResourcePath getCurrentResource() {
+	public NuclrResource getCurrentResource() {
 		return null;
 	}
 
