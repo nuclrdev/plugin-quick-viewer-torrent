@@ -112,8 +112,8 @@ public class TorrentQuickViewProvider implements QuickViewNuclrPlugin {
 	
 	private String id = "dev.nuclr.plugin.core.quickviewer.torrent";
 	private String name = "Torrent Quick Viewer";
-	private String version = "1.0.0";
-	private String description = "A quick viewer for .torrent files — displays metadata, trackers, file listing, info hash and magnet link.";
+	private final String version = loadVersion();
+	private String description = "A quick viewer for .torrent files â€” displays metadata, trackers, file listing, info hash and magnet link.";
 	private String author = "Nuclr Development Team";
 	private String license = "Apache-2.0";
 	private String website = "https://nuclr.dev";
@@ -133,6 +133,16 @@ public class TorrentQuickViewProvider implements QuickViewNuclrPlugin {
 	@Override
 	public String version() {
 		return version;
+	}
+	private static String loadVersion() {
+		try (var stream = TorrentQuickViewProvider.class.getResourceAsStream("/plugin.properties")) {
+			if (stream == null) return "unknown";
+			var props = new java.util.Properties();
+			props.load(stream);
+			return props.getProperty("version", "unknown");
+		} catch (java.io.IOException e) {
+			return "unknown";
+		}
 	}
 
 	@Override
