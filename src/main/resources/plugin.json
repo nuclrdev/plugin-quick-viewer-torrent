@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "version": "${project.version}",
+  "platformSdkVersion": "4.0.0",
+	"plugins": [
+		{
+			"class": "dev.nuclr.plugin.core.quick.viewer.TorrentQuickViewProvider",
+			"type": "QuickView",
+			"id": "dev.nuclr.plugin.core.quickviewer.torrent",
+			"name": "Torrent Quick Viewer",
+			"version": "${project.version}",
+			"description": "A quick viewer for .torrent files — displays metadata, trackers, file listing, info hash and magnet link.",
+			"author": "Nuclr Development Team",
+			"license": "Apache-2.0",
+			"website": "https://nuclr.dev",
+			"pageUrl": "https://nuclr.dev/plugins/core/torrent-quick-viewer.html",
+			"docUrl": "https://nuclr.dev/plugins/core/torrent-quick-viewer.html",
+			"developer": "Official",
+			"singleton": true,
+			"priority": 1
+		}
+	]
+}
