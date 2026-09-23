@@ -29,6 +29,12 @@ Instead of staring at bencoded data, you get the important details instantly:
 | 🌐 Trackers | Unique trackers plus grouped announce-list tiers |
 | 📂 Files | File path and size for every entry, capped at 500 rows |
 
+## 🖼️ Thumbnail
+
+A listing page: the torrent's name, file count and total size, then the files it carries.
+
+It implements the platform SDK 6.0.0 thumbnail methods, so plugins that want a picture of a file - attachment chips in AI Projects, for one - get it through Commander.
+
 ## 📥 Installation
 
 Copy the signed plugin archive and detached signature into the Nuclr Commander `plugins/` directory:
@@ -82,7 +88,7 @@ All dependencies are provided by Nuclr Commander at runtime — nothing extra is
 
 | Library | Version | Purpose |
 |---|---|---|
-| `dev.nuclr:platform-sdk` | `3.0.1` | Nuclr platform interfaces |
+| `dev.nuclr:platform-sdk` | `6.0.0` | Nuclr platform interfaces |
 
 ## 📄 License
 

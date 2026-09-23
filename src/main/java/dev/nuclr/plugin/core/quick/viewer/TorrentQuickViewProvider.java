@@ -1,5 +1,8 @@
 package dev.nuclr.plugin.core.quick.viewer;
 
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -9,6 +12,9 @@ import dev.nuclr.platform.NuclrThemeScheme;
 import dev.nuclr.platform.plugin.NuclrPluginContext;
 import dev.nuclr.platform.plugin.NuclrResource;
 import dev.nuclr.platform.plugin.QuickViewNuclrPlugin;
+import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentFileEntry;
+import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentMeta;
+import dev.nuclr.plugin.core.quick.viewer.torrent.TorrentParser;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -72,6 +78,46 @@ public class TorrentQuickViewProvider implements QuickViewNuclrPlugin {
 		return this.panel.load(resource, cancelled);
 	}
 
+
+	/** Metainfo files are small; anything past this is not one worth drawing. */
+	private static final int MAX_THUMBNAIL_BYTES = 16 * 1024 * 1024;
+
+	@Override
+	public boolean supportsThumbnails() {
+		return true;
+	}
+
+	/** A listing page: the torrent's name and totals, then the files it carries. */
+	@Override
+	public BufferedImage thumbnail(NuclrResource resource, int maxWidth, int maxHeight, AtomicBoolean cancelled) {
+		if (maxWidth <= 0 || maxHeight <= 0 || !supports(resource) || resource.getLength() > MAX_THUMBNAIL_BYTES) {
+			return null;
+		}
+		try {
+			byte[] data;
+			try (var in = resource.openInputStream()) {
+				data = in.readNBytes(MAX_THUMBNAIL_BYTES);
+			}
+			if (cancelled != null && cancelled.get()) {
+				return null;
+			}
+			TorrentMeta meta = TorrentParser.parse(data);
+			List<PageThumbnail.Line> lines = new ArrayList<>();
+			lines.add(PageThumbnail.Line.title(meta.getName() != null ? meta.getName() : resource.getName()));
+			int fileCount = meta.getFiles() != null ? meta.getFiles().size() : 0;
+			lines.add(PageThumbnail.Line.muted(fileCount + (fileCount == 1 ? " file · " : " files · ")
+					+ TorrentViewPanel.formatSize(meta.getTotalSize())));
+			lines.add(PageThumbnail.Line.blank());
+			if (meta.getFiles() != null) {
+				meta.getFiles().stream().limit(150).map(TorrentFileEntry::getPath)
+						.forEach(path -> lines.add(PageThumbnail.Line.mono(path)));
+			}
+			return PageThumbnail.render(lines, maxWidth, maxHeight, cancelled);
+		} catch (Exception e) {
+			log.debug("No thumbnail for {}: {}", resource.getName(), e.toString());
+			return null;
+		}
+	}
 
 	@Override
 	public void closeResource() {
