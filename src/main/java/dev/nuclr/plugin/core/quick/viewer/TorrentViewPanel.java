@@ -1,5 +1,7 @@
 package dev.nuclr.plugin.core.quick.viewer;
 
+import static dev.nuclr.plugin.core.quick.viewer.Messages.tr;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -51,7 +53,7 @@ public class TorrentViewPanel extends JPanel {
 
 	public TorrentViewPanel() {
 		setLayout(new BorderLayout());
-		showMessage("No file selected.");
+		showMessage(tr("panel.no.file"));
 	}
 
 	// ---- public API -------------------------------------------------------
@@ -59,7 +61,7 @@ public class TorrentViewPanel extends JPanel {
 	public boolean load(NuclrResource item, AtomicBoolean cancelled) {
 		Thread prev = loadThread;
 		if (prev != null) prev.interrupt();
-		showMessage("Loading\u2026");
+		showMessage(tr("panel.loading"));
 		loadThread = Thread.ofVirtual().start(() -> {
 			try {
 				byte[] data;
@@ -106,7 +108,7 @@ public class TorrentViewPanel extends JPanel {
 		gbc.gridx = 0;
 		gbc.insets = new Insets(4, 0, 4, 0);
 
-		JLabel title = new JLabel("Invalid torrent file");
+		JLabel title = new JLabel(tr("panel.invalid"));
 		title.setFont(title.getFont().deriveFont(Font.BOLD, 14f));
 		gbc.gridy = 0;
 		errPanel.add(title, gbc);
@@ -143,17 +145,17 @@ public class TorrentViewPanel extends JPanel {
 		panel.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
 		// 1. Summary
-		FormSection summary = new FormSection("Summary");
-		summary.addRow("Name",         meta.getName());
-		summary.addRow("Mode",         meta.isMultiFile() ? "Multi-file" : "Single-file");
-		summary.addRow("Total size",   formatSize(meta.getTotalSize()));
+		FormSection summary = new FormSection(tr("section.summary"));
+		summary.addRow(tr("row.name"),         meta.getName());
+		summary.addRow(tr("row.mode"),         meta.isMultiFile() ? tr("mode.multi") : tr("mode.single"));
+		summary.addRow(tr("row.total.size"),   formatSize(meta.getTotalSize()));
 		if (meta.isMultiFile()) {
-			summary.addRow("File count", String.valueOf(meta.getFiles().size()));
+			summary.addRow(tr("row.file.count"), String.valueOf(meta.getFiles().size()));
 		}
-		summary.addRow("Piece length", formatSize(meta.getPieceLength()));
-		summary.addRow("Pieces",       String.valueOf(meta.getPieceCount()));
+		summary.addRow(tr("row.piece.length"), formatSize(meta.getPieceLength()));
+		summary.addRow(tr("row.pieces"),       String.valueOf(meta.getPieceCount()));
 		if (meta.isPrivateFlag()) {
-			summary.addRow("Private", "Yes");
+			summary.addRow(tr("row.private"), tr("value.yes"));
 		}
 		panel.add(summary);
 		panel.add(vgap(6));
@@ -163,16 +165,16 @@ public class TorrentViewPanel extends JPanel {
 				|| meta.getCreationDate() != null
 				|| meta.getComment() != null;
 		if (hasMeta) {
-			FormSection metaSection = new FormSection("Metadata");
+			FormSection metaSection = new FormSection(tr("section.metadata"));
 			if (meta.getCreatedBy() != null) {
-				metaSection.addRow("Created by", meta.getCreatedBy());
+				metaSection.addRow(tr("row.created.by"), meta.getCreatedBy());
 			}
 			if (meta.getCreationDate() != null) {
 				String ts = DATE_FMT.format(Instant.ofEpochSecond(meta.getCreationDate()));
-				metaSection.addRow("Created", ts);
+				metaSection.addRow(tr("row.created"), ts);
 			}
 			if (meta.getComment() != null) {
-				metaSection.addRow("Comment", meta.getComment());
+				metaSection.addRow(tr("row.comment"), meta.getComment());
 			}
 			panel.add(metaSection);
 			panel.add(vgap(6));
@@ -180,16 +182,16 @@ public class TorrentViewPanel extends JPanel {
 
 		// 3. Info hash
 		if (meta.getInfoHashHex() != null) {
-			FormSection hashSection = new FormSection("Info Hash");
-			hashSection.addCopyRow(meta.getInfoHashHex(), meta.getInfoHashHex(), "Copy");
+			FormSection hashSection = new FormSection(tr("section.info.hash"));
+			hashSection.addCopyRow(meta.getInfoHashHex(), meta.getInfoHashHex(), tr("button.copy"));
 			panel.add(hashSection);
 			panel.add(vgap(6));
 		}
 
 		// 4. Magnet link
 		if (meta.getMagnetLink() != null) {
-			FormSection magnetSection = new FormSection("Magnet Link");
-			magnetSection.addCopyRow(meta.getMagnetLink(), meta.getMagnetLink(), "Copy Magnet");
+			FormSection magnetSection = new FormSection(tr("section.magnet"));
+			magnetSection.addCopyRow(meta.getMagnetLink(), meta.getMagnetLink(), tr("button.copy.magnet"));
 			panel.add(magnetSection);
 			panel.add(vgap(6));
 		}
@@ -197,12 +199,12 @@ public class TorrentViewPanel extends JPanel {
 		// 5. Trackers
 		int trackerCount = countTrackers(meta);
 		if (trackerCount > 0) {
-			FormSection trackersSection = new FormSection("Trackers (" + trackerCount + ")");
+			FormSection trackersSection = new FormSection(tr("section.trackers", String.valueOf(trackerCount)));
 			List<List<String>> tiers = meta.getTrackerTiers();
 			if (!tiers.isEmpty()) {
 				int tierNum = 1;
 				for (List<String> tier : tiers) {
-					trackersSection.addSubheader("Tier " + tierNum++);
+					trackersSection.addSubheader(tr("trackers.tier", String.valueOf(tierNum++)));
 					for (String tracker : tier) trackersSection.addMonoText(tracker);
 				}
 			} else if (meta.getAnnounce() != null) {
@@ -214,7 +216,7 @@ public class TorrentViewPanel extends JPanel {
 
 		// 6. Files
 		List<TorrentFileEntry> files = meta.getFiles();
-		String filesHeader = "Files (" + files.size() + "  \u2014  " + formatSize(meta.getTotalSize()) + ")";
+		String filesHeader = tr("section.files", String.valueOf(files.size()), formatSize(meta.getTotalSize()));
 		FormSection filesSection = new FormSection(filesHeader);
 		boolean truncated = files.size() > 500;
 		List<TorrentFileEntry> display = truncated ? files.subList(0, 500) : files;
@@ -222,7 +224,7 @@ public class TorrentViewPanel extends JPanel {
 			filesSection.addFileRow(f.getPath(), f.getLength());
 		}
 		if (truncated) {
-			filesSection.addSubheader("\u2026 (list truncated to 500 entries)");
+			filesSection.addSubheader(tr("files.truncated", String.valueOf(500)));
 		}
 		panel.add(filesSection);
 		panel.add(Box.createVerticalGlue());
@@ -240,16 +242,16 @@ public class TorrentViewPanel extends JPanel {
 	}
 
 	static String formatSize(long bytes) {
-		if (bytes < 0) return "Unknown";
-		if (bytes == 0) return "0 B";
-		if (bytes < 1_024) return bytes + " B";
+		if (bytes < 0) return tr("size.unknown");
+		if (bytes == 0) return tr("size.bytes", "0");
+		if (bytes < 1_024) return tr("size.bytes", String.valueOf(bytes));
 		double kb = bytes / 1_024.0;
-		if (kb < 1_024) return String.format("%.1f KB", kb);
+		if (kb < 1_024) return tr("size.kb", String.format("%.1f", kb));
 		double mb = kb / 1_024.0;
-		if (mb < 1_024) return String.format("%.1f MB", mb);
+		if (mb < 1_024) return tr("size.mb", String.format("%.1f", mb));
 		double gb = mb / 1_024.0;
-		if (gb < 1_024) return String.format("%.2f GB", gb);
-		return String.format("%.2f TB", gb / 1_024.0);
+		if (gb < 1_024) return tr("size.gb", String.format("%.2f", gb));
+		return tr("size.tb", String.format("%.2f", gb / 1_024.0));
 	}
 
 	static String escapeHtml(String s) {

@@ -1,5 +1,7 @@
 package dev.nuclr.plugin.core.quick.viewer.torrent;
 
+import static dev.nuclr.plugin.core.quick.viewer.Messages.tr;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,10 +67,10 @@ public class BencodeParser {
 
 	private Object parseValue() throws BencodeException {
 		if (pos >= data.length) {
-			throw new BencodeException("Unexpected end of data at position " + pos);
+			throw new BencodeException(tr("parse.unexpected.end", String.valueOf(pos)));
 		}
 		if (++depth > MAX_DEPTH) {
-			throw new BencodeException("Max nesting depth " + MAX_DEPTH + " exceeded");
+			throw new BencodeException(tr("parse.max.depth", String.valueOf(MAX_DEPTH)));
 		}
 		try {
 			byte b = data[pos];
@@ -80,7 +82,7 @@ public class BencodeParser {
 			}
 			if (b >= '0' && b <= '9') return parseByteString();
 			throw new BencodeException(
-					"Invalid bencode token 0x" + Integer.toHexString(b & 0xFF) + " at position " + pos);
+					tr("parse.invalid.token", Integer.toHexString(b & 0xFF), String.valueOf(pos)));
 		} finally {
 			depth--;
 		}
@@ -91,14 +93,14 @@ public class BencodeParser {
 		int start = pos;
 		while (pos < data.length && data[pos] != 'e') pos++;
 		if (pos >= data.length) {
-			throw new BencodeException("Unterminated integer starting at " + start);
+			throw new BencodeException(tr("parse.unterminated.integer", String.valueOf(start)));
 		}
 		String s = new String(data, start, pos - start, StandardCharsets.US_ASCII);
 		pos++; // skip 'e'
 		try {
 			return Long.parseLong(s);
 		} catch (NumberFormatException e) {
-			throw new BencodeException("Invalid integer: " + s);
+			throw new BencodeException(tr("parse.invalid.integer", s));
 		}
 	}
 
@@ -106,21 +108,21 @@ public class BencodeParser {
 		int lenStart = pos;
 		while (pos < data.length && data[pos] != ':') pos++;
 		if (pos >= data.length) {
-			throw new BencodeException("Missing ':' in byte string at " + lenStart);
+			throw new BencodeException(tr("parse.missing.colon", String.valueOf(lenStart)));
 		}
 		String lenStr = new String(data, lenStart, pos - lenStart, StandardCharsets.US_ASCII);
 		int len;
 		try {
 			len = Integer.parseInt(lenStr);
 		} catch (NumberFormatException e) {
-			throw new BencodeException("Invalid string length: " + lenStr);
+			throw new BencodeException(tr("parse.invalid.length", lenStr));
 		}
 		if (len < 0 || len > MAX_STRING_BYTES) {
-			throw new BencodeException("String length out of bounds: " + len);
+			throw new BencodeException(tr("parse.length.out.of.bounds", String.valueOf(len)));
 		}
 		pos++; // skip ':'
 		if (pos + len > data.length) {
-			throw new BencodeException("String data truncated at position " + pos + " (need " + len + " bytes)");
+			throw new BencodeException(tr("parse.string.truncated", String.valueOf(pos), String.valueOf(len)));
 		}
 		byte[] result = Arrays.copyOfRange(data, pos, pos + len);
 		pos += len;
@@ -132,12 +134,12 @@ public class BencodeParser {
 		List<Object> list = new ArrayList<>();
 		while (pos < data.length && data[pos] != 'e') {
 			if (++totalEntries > MAX_ENTRIES) {
-				throw new BencodeException("Max entry count " + MAX_ENTRIES + " exceeded");
+				throw new BencodeException(tr("parse.max.entries", String.valueOf(MAX_ENTRIES)));
 			}
 			list.add(parseValue());
 		}
 		if (pos >= data.length) {
-			throw new BencodeException("Unterminated list");
+			throw new BencodeException(tr("parse.unterminated.list"));
 		}
 		pos++; // skip 'e'
 		return list;
@@ -148,7 +150,7 @@ public class BencodeParser {
 		Map<String, Object> map = new LinkedHashMap<>();
 		while (pos < data.length && data[pos] != 'e') {
 			if (++totalEntries > MAX_ENTRIES) {
-				throw new BencodeException("Max entry count " + MAX_ENTRIES + " exceeded");
+				throw new BencodeException(tr("parse.max.entries", String.valueOf(MAX_ENTRIES)));
 			}
 			byte[] keyBytes = parseByteString();
 			String key = new String(keyBytes, StandardCharsets.UTF_8);
@@ -163,7 +165,7 @@ public class BencodeParser {
 			map.put(key, value);
 		}
 		if (pos >= data.length) {
-			throw new BencodeException("Unterminated dictionary");
+			throw new BencodeException(tr("parse.unterminated.dict"));
 		}
 		pos++; // skip 'e'
 		return map;

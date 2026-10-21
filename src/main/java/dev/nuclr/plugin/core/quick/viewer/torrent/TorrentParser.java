@@ -1,5 +1,7 @@
 package dev.nuclr.plugin.core.quick.viewer.torrent;
 
+import static dev.nuclr.plugin.core.quick.viewer.Messages.tr;
+
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -39,7 +41,7 @@ public final class TorrentParser {
 		Object root = parser.parse();
 
 		if (!(root instanceof Map<?, ?> rawRoot)) {
-			throw new BencodeException("Root element is not a dictionary");
+			throw new BencodeException(tr("parse.root.not.dict"));
 		}
 		Map<String, Object> rootDict = (Map<String, Object>) rawRoot;
 
@@ -59,7 +61,7 @@ public final class TorrentParser {
 		// Info dictionary
 		Object infoObj = rootDict.get("info");
 		if (!(infoObj instanceof Map<?, ?> rawInfo)) {
-			throw new BencodeException("Missing or invalid 'info' dictionary");
+			throw new BencodeException(tr("parse.missing.info"));
 		}
 		Map<String, Object> info = (Map<String, Object>) rawInfo;
 

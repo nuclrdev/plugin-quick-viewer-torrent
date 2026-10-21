@@ -1,5 +1,7 @@
 package dev.nuclr.plugin.core.quick.viewer;
 
+import static dev.nuclr.plugin.core.quick.viewer.Messages.tr;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,9 @@ public class TorrentQuickViewProvider implements QuickViewNuclrPlugin {
 	@Override
 	public void preinit(NuclrPluginContext context) {
 		this.context = context;
+		if (context != null) {
+			Messages.use(context.getLocale());
+		}
 	}
 
 	@Override
@@ -105,8 +110,8 @@ public class TorrentQuickViewProvider implements QuickViewNuclrPlugin {
 			List<PageThumbnail.Line> lines = new ArrayList<>();
 			lines.add(PageThumbnail.Line.title(meta.getName() != null ? meta.getName() : resource.getName()));
 			int fileCount = meta.getFiles() != null ? meta.getFiles().size() : 0;
-			lines.add(PageThumbnail.Line.muted(fileCount + (fileCount == 1 ? " file · " : " files · ")
-					+ TorrentViewPanel.formatSize(meta.getTotalSize())));
+			lines.add(PageThumbnail.Line.muted(tr(fileCount == 1 ? "thumb.files.one" : "thumb.files.many",
+					String.valueOf(fileCount), TorrentViewPanel.formatSize(meta.getTotalSize()))));
 			lines.add(PageThumbnail.Line.blank());
 			if (meta.getFiles() != null) {
 				meta.getFiles().stream().limit(150).map(TorrentFileEntry::getPath)
